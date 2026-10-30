@@ -1,0 +1,5 @@
+{
+  "name": "jev-router",
+  "owner": { "name": "pyxl-dev" },
+  "plugins": [{ "name": "jev-router", "source": "./" }]
+}

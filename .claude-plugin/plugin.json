@@ -1,0 +1,17 @@
+{
+  "name": "jev-router",
+  "version": "0.2.0",
+  "description": "Jev (TypeSafe, via OpenRouter) picks the reasoning effort of each message; a band shows the pick with buttons to pin another.",
+  "author": { "name": "pyxl-dev" },
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "openrouterKey": {
+      "type": "string",
+      "title": "OpenRouter API key",
+      "description": "Key used to call Jev. Leave empty on macOS to read it from the Keychain item 'openrouter-jev'.",
+      "sensitive": true,
+      "required": false
+    }
+  }
+}
