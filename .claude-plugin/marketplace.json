@@ -1,5 +1,6 @@
 {
   "name": "jev-router",
   "owner": { "name": "pyxl-dev" },
+  "metadata": { "description": "Claude Code mod: Jev picks the reasoning effort of each message." },
   "plugins": [{ "name": "jev-router", "source": "./" }]
 }
