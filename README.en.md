@@ -19,6 +19,8 @@ Small tasks run at `low`, big ones at `high`, with no manual effort setting to j
 
 <p align="center"><img src="docs/banner.svg" width="720" alt="jev-router: Jev picks the reasoning effort of each message, between low, medium and high"></p>
 
+<p align="center"><img src="docs/screenshot.png" width="640" alt="The mod's band above the prompt box: Jev's pick (low, 83%), effort used, low, medium, high and Auto buttons"></p>
+
 ## Why
 
 Reasoning effort is set once for the whole session. Too high, and "rename this variable" gets as much thinking as a full refactor. Too low, and the refactor is rushed. Switching models per message is no answer either: it drops the prompt cache.
@@ -154,6 +156,7 @@ The log test (`hooks/log.test.ts`) imports `claude-code/testing`.
 | `.claude-plugin/plugin.json` | plugin manifest and the `OpenRouter API key` option |
 | `.claude-plugin/marketplace.json` | the `pyxl-dev/jev-router` marketplace |
 | `docs/logo.svg`, `docs/banner.svg` | logo and banner |
+| `docs/screenshot.png` | screenshot of the band |
 | `AGENTS.md` | instructions for any AI agent |
 | `install.sh` | installer |
 

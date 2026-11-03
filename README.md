@@ -19,6 +19,8 @@ Les petites tâches partent en `low`, les grosses en `high`, sans que tu aies à
 
 <p align="center"><img src="docs/banner.svg" width="720" alt="jev-router : Jev choisit l'effort de raisonnement de chaque message, entre low, medium et high"></p>
 
+<p align="center"><img src="docs/screenshot.png" width="640" alt="Le bandeau du mod au-dessus de la zone de saisie : choix de Jev (low, 83 %), effort utilisé, boutons low, medium, high et Auto"></p>
+
 ## Pourquoi
 
 L'effort de raisonnement se règle une fois pour toute la session. Trop haut, un « renomme cette variable » coûte autant de réflexion qu'un refactoring complet. Trop bas, le refactoring est bâclé. Et changer de modèle à chaque message n'est pas une option : ça vide le cache de prompt.
@@ -154,6 +156,7 @@ Le test du journal (`hooks/log.test.ts`) importe `claude-code/testing`.
 | `.claude-plugin/plugin.json` | manifeste du plugin et option `OpenRouter API key` |
 | `.claude-plugin/marketplace.json` | marketplace `pyxl-dev/jev-router` |
 | `docs/logo.svg`, `docs/banner.svg` | logo et bannière |
+| `docs/screenshot.png` | capture du bandeau |
 | `AGENTS.md` | instructions pour n'importe quel agent IA |
 | `install.sh` | installateur |
 
