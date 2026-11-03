@@ -1,6 +1,6 @@
 {
   "name": "jev-router",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Jev (TypeSafe, via OpenRouter) picks the reasoning effort of each message; a band shows the pick with buttons to pin another.",
   "author": { "name": "pyxl-dev" },
   "license": "MIT",

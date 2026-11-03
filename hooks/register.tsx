@@ -1,7 +1,7 @@
 import { atom, read, update } from 'claude-code'
-import type { Register } from 'claude-code'
+import type { Engine, Register } from 'claude-code'
 
-import type { Applied, Effort, Pick, Pin } from '../types'
+import type { Applied, Effort, LogEntry, Pick, Pin } from '../types'
 
 // Jev picks the effort of each message, called straight from the mod.
 // The model is never switched: a model change throws away the prompt cache,
@@ -23,9 +23,26 @@ const pin = atom({ plugin: 'jev-router', key: 'pin' } as const, {})
 const auto = atom({ plugin: 'jev-router', key: 'auto' } as const, true)
 const applied = atom({ plugin: 'jev-router', key: 'applied' } as const, null)
 const LABEL_GRACE_MS = 10000 // a reply first drawn this long after its turn still gets labelled
+const LOG_DIR = '.claude/jev-router/decisions' // under $HOME: one JSONL file per session and month
+const LOG_PROMPT_CHARS = 200 // how much of the prompt each log line keeps
 
 const EFFORTS: Effort[] = ['low', 'medium', 'high']
 const pct = (x: number) => `${Math.round(x * 100)}%`
+
+// Appends one line to this session's file; a log that can't be written never blocks a turn.
+async function writeLog($: Engine, line: LogEntry) {
+  try {
+    const home = await $.env.get('HOME')
+    if (!home) {
+      return
+    }
+    const path = `${home}/${LOG_DIR}/${line.at.slice(0, 7)}/${await $.session.id()}.jsonl`
+    const old = (await $.fs.exists(path)) ? await $.fs.read(path) : ''
+    await $.fs.write(path, `${old}${JSON.stringify(line)}\n`)
+  } catch {
+    // ignore: the log is a convenience
+  }
+}
 
 export const register: Register = (on, options) => {
   // The key is read once per load and never shown; '' means Jev stays off.
@@ -53,11 +70,15 @@ export const register: Register = (on, options) => {
   let turnEffort: string | null = null
   let labelUntil = 0
   const labels = new Map<string, string>() // reply's first message id -> effort label
+  // Decision log: the prompt being sent, then each main-loop turn's decision until the turn ends.
+  let sentText: string | null = null
+  const decisions = new Map<string, LogEntry>() // turnId -> its line, written at turn.complete
 
   on('prompt.submit', ($, e, next) => {
     if (e.command || e.isMeta || e.turnId || e.text.trim().length < 8) {
       return next(e)
     }
+    sentText = e.text
     pending = (async () => {
       try {
         const k = await apiKey(argv => $.process.run(argv, { timeoutMs: WAIT_MS }))
@@ -102,8 +123,10 @@ export const register: Register = (on, options) => {
     if (e.agentId) {
       return yield* next(e)
     }
+    let fresh: Pick | null = null
+    const isFirstStep = sentText !== null && !decisions.has(e.turnId)
     if (pending) {
-      await Promise.race([pending, $.clock.sleep(WAIT_MS)])
+      fresh = await Promise.race([pending, $.clock.sleep(WAIT_MS).then(() => null)])
       pending = null
     }
     const p = await read($, pick)
@@ -117,6 +140,18 @@ export const register: Register = (on, options) => {
     }
     const now: Applied = { model: e.model, effort: effort === undefined ? undefined : String(effort) }
     await update($, applied, () => now)
+    if (isFirstStep) {
+      decisions.set(e.turnId, {
+        at: new Date(await $.clock.now()).toISOString(),
+        prompt: (sentText as string).slice(0, LOG_PROMPT_CHARS),
+        jev: fresh,
+        pinned: pinned.effort ?? null,
+        auto: isAuto,
+        appEffort: e.effort === undefined ? null : String(e.effort),
+        effort: now.effort ?? null,
+      })
+      sentText = null
+    }
     turnEffort = now.effort ?? 'réglage de l\'app'
     labelUntil = Number.POSITIVE_INFINITY
 
@@ -126,6 +161,18 @@ export const register: Register = (on, options) => {
   on('turn.complete', async ($, e, next) => {
     if (!e.agentId) {
       labelUntil = (await $.clock.now()) + LABEL_GRACE_MS
+      const entry = decisions.get(e.turnId)
+      decisions.delete(e.turnId)
+      if (entry) {
+        await writeLog($, {
+          ...entry,
+          model: e.usage?.model ?? null,
+          outputTokens: e.usage?.output_tokens ?? null,
+          inputTokens: e.usage ? e.usage.input_tokens + e.usage.cache_read_input_tokens + e.usage.cache_creation_input_tokens : null,
+          durationMs: e.durationMs,
+          aborted: e.isAborted,
+        })
+      }
     }
     return next(e)
   })

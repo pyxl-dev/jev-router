@@ -9,6 +9,23 @@ A Claude Code mod that lets **Jev** (TypeSafe System One, `typesafe/jev-1.13` on
 - Each reply gets a small `effort : <level>` line under it.
 - Subagents, slash commands and messages shorter than 8 characters are left alone. If Jev is slow (over 3 s) or fails, the message goes through unchanged.
 
+## Decision log
+
+Each message Jev rated writes one JSON line to `~/.claude/jev-router/decisions/<YYYY-MM>/<session id>.jsonl`, once its turn ends:
+
+- `at`, `prompt` (first 200 characters)
+- `jev`: Jev's pick, confidence and latency (`null` when Jev failed or was too slow)
+- `pinned`, `auto`, `appEffort` (the app's own setting) and `effort` (what actually ran)
+- `model`, `inputTokens`, `outputTokens` (thinking included), `durationMs`, `aborted`
+
+To see how often each effort ran, and how much output it cost on average:
+
+```bash
+cat ~/.claude/jev-router/decisions/*/*.jsonl | jq -s 'group_by(.effort) | map({effort: .[0].effort, turns: length, avgOutput: (map(.outputTokens // 0) | add / length | round)})'
+```
+
+The log stays on your machine.
+
 ## Install
 
 ```
